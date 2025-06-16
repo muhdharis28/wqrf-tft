@@ -1,6 +1,9 @@
 const HistoriPeramalan = require('../models/HistoriPeramalan');
 const Lokasi = require('../models/Lokasi');
 
+const { getIO } = require('../socket');
+const io = getIO();
+
 exports.getAll = async (req, res) => {
     try {
         const lokasiId = req.query.lokasiId;
@@ -45,6 +48,13 @@ exports.getById = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         const newData = await HistoriPeramalan.create(req.body);
+
+        const fullData = await HistoriPeramalan.findByPk(newData.id, {
+            include: { model: Lokasi, attributes: ['id', 'nama'] }
+        });
+
+        io.emit("peramalanBaru", fullData);
+
         res.status(201).json(newData);
     } catch (error) {
         res.status(500).json({ message: 'Gagal menambahkan data', error });
@@ -57,6 +67,13 @@ exports.update = async (req, res) => {
         if (!data) return res.status(404).json({ message: 'Data tidak ditemukan' });
 
         await data.update(req.body);
+
+        const updatedData = await HistoriPeramalan.findByPk(req.params.id, {
+            include: { model: Lokasi, attributes: ['id', 'nama'] }
+        });
+
+        io.emit("peramalanUpdate", updatedData);
+
         res.json(data);
     } catch (error) {
         res.status(500).json({ message: 'Gagal memperbarui data', error });

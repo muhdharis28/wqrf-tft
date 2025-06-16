@@ -1,5 +1,8 @@
 const Lokasi = require("../models/Lokasi");
 
+const { getIO } = require('../socket');
+const io = getIO();
+
 exports.getAllLokasi = async (req, res) => {
     try {
         const lokasi = await Lokasi.findAll();
@@ -28,6 +31,9 @@ exports.createLokasi = async (req, res) => {
     try {
         const { nama, substrat, kedalaman, latitude, longitude, keterangan } = req.body;
         const newLokasi = await Lokasi.create({ nama, substrat, kedalaman, latitude, longitude, keterangan });
+
+        io.emit("lokasiBaru", newLokasi);
+
         res.status(201).json(newLokasi);
     } catch (error) {
         res.status(500).json({ error: "Gagal menambahkan lokasi" });
@@ -48,6 +54,8 @@ exports.updateLokasi = async (req, res) => {
         lokasi.longitude = longitude;
         lokasi.keterangan = keterangan;
         await lokasi.save();
+
+        io.emit("lokasiUpdate", lokasi);
 
         res.json(lokasi);
     } catch (error) {

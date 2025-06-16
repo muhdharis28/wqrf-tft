@@ -20,6 +20,7 @@
     "node-fetch": "^2.7.0",
     "sequelize": "^6.37.7",
     "server": "file:",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },

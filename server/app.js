@@ -1,22 +1,29 @@
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require("socket.io");
 require('dotenv').config();
 
+const { initSocket } = require('./socket');
+
 const app = express();
+const server = http.createServer(app);
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swagger');
 
 const customSwaggerUIOptions = {
-    customCss: `
+  customCss: `
       .swagger-ui .topbar { display: none; }
       .swagger-ui .info h1 { font-weight: 700; color: #2c3e50; }
       .swagger-ui .info p { font-size: 14px; }
       .swagger-ui .scheme-container { background: #f4f4f4; }
       .swagger-ui .opblock-tag { font-size: 16px; }
     `,
-    customSiteTitle: "Dokumentasi API",
+  customSiteTitle: "Dokumentasi API",
 };
+
+initSocket(server);
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
@@ -28,4 +35,4 @@ app.use('/api/lokasi', require('./routes/lokasiRoutes'));
 app.use('/api/histori-peramalan', require('./routes/historiPeramalanRoutes'));
 app.use('/api/peramalan', require('./routes/peramalanRoutes'));
 
-module.exports = app;
+module.exports = { app, server };

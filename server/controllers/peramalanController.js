@@ -5,6 +5,9 @@ const DataKualitasAir = require('../models/DataKualitasAir');
 const fetch = require("node-fetch");
 const fs = require("fs");
 
+const { getIO } = require('../socket');
+const io = getIO();
+
 exports.runForecast = async (req, res) => {
     try {
         const history = req.body;
@@ -47,6 +50,7 @@ exports.runForecast = async (req, res) => {
 
             try {
                 const jsonResult = JSON.parse(match[1].trim());
+                io.emit("hasilPeramalanBaru", jsonResult);
                 res.json(jsonResult);
             } catch (err) {
                 console.error("Parsing error:", err);
@@ -191,6 +195,9 @@ exports.generateModel = async (req, res) => {
                 }
 
                 console.log("✅ Training berhasil:\n", stdout);
+
+                io.emit("trainingModelSelesai", { timestamp: new Date().toISOString() });
+
                 res.json({ message: "Training berhasil", log: stdout });
             } else {
                 console.error("❌ Training gagal:\n", stderr);
@@ -263,6 +270,10 @@ exports.generateSummary = (req, res) => {
     ollama.stdin.end();
 
     ollama.on("close", () => {
-        res.json({ kesimpulan: output.trim() });
+        const trimmed = output.trim();
+
+        io.emit("ringkasanPeramalan", { kesimpulan: trimmed });
+
+        res.json({ kesimpulan: trimmed });
     });
 };

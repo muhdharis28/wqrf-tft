@@ -1,6 +1,8 @@
 const DataKualitasAir = require('../models/DataKualitasAir');
 const Lokasi = require('../models/Lokasi');
 const { Op } = require('sequelize');
+const { getIO } = require('../socket');
+const io = getIO();
 
 exports.getAll = async (req, res) => {
     try {
@@ -83,6 +85,12 @@ exports.getById = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         const newData = await DataKualitasAir.create(req.body);
+
+        const fullData = await DataKualitasAir.findByPk(newData.id, {
+            include: { model: Lokasi, attributes: ['id', 'nama'] }
+        });
+
+        io.emit("dataSensorBaru", fullData);
         res.status(201).json(newData);
     } catch (error) {
         res.status(500).json({ message: 'Gagal menambahkan data', error });
@@ -95,6 +103,13 @@ exports.update = async (req, res) => {
         if (!data) return res.status(404).json({ message: 'Data tidak ditemukan' });
 
         await data.update(req.body);
+
+        const updatedData = await DataKualitasAir.findByPk(req.params.id, {
+            include: { model: Lokasi, attributes: ['id', 'nama'] }
+        });
+
+        io.emit("dataSensorUpdate", updatedData);
+
         res.json(data);
     } catch (error) {
         res.status(500).json({ message: 'Gagal memperbarui data', error });
